@@ -1,0 +1,39 @@
+{
+  "name": "rdf-serializer-jsonld-ext",
+  "version": "0.9.0",
+  "description": "JSON-LD serializer that implements the RDFJS Sink Interfaces and supports different output styles",
+  "main": "index.js",
+  "scripts": {
+    "lint": "standard",
+    "test": "npm run lint && mocha",
+    "test-browser": "build-browser-test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rdf-ext/rdf-parser-jsonld.git"
+  },
+  "keywords": [
+    "rdf",
+    "rdfjs",
+    "rdf-ext",
+    "serializer",
+    "json-ld",
+    "stream"
+  ],
+  "author": "Thomas Bergwinkl <bergi@axolotlfarm.org> (https://www.bergnet.org/people/bergi/card#me)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rdf-ext/rdf-serializer-jsonld-ext/issues"
+  },
+  "homepage": "https://github.com/rdf-ext/rdf-serializer-jsonld-ext",
+  "dependencies": {
+    "jsonld": "^0.4.12",
+    "rdf-sink": "git://github.com/rdf-ext/rdf-sink.git#develop",
+    "readable-stream": "^2.2.9"
+  },
+  "devDependencies": {
+    "mocha": "^3.2.0",
+    "rdf-ext": "git://github.com/rdf-ext/rdf-ext.git#develop",
+    "standard": "^9.0.2"
+  }
+}
