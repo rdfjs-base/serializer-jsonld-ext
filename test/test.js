@@ -312,6 +312,64 @@ describe('rdf-serializer-jsonld-ext', () => {
     })
   })
 
+
+  it('should not skip @graph property if options is true and array.length != 1', () => {
+    const s0 = rdf.blankNode('b0')
+
+    const quads = [
+      rdf.quad(
+        s0,
+        rdf.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
+        rdf.namedNode('http://example.org/Thing')
+      ),
+      rdf.quad(
+        s0,
+        rdf.namedNode('http://example.org/property0'),
+        rdf.literal('value0')
+      )
+    ]
+
+    const context = {
+      '@context': {
+        '@vocab': 'http://example.org/'
+      },
+      "@type": "Thing"
+    }
+
+    const jsonld = {
+      '@graph': [{
+        '@id': '_:b0',
+        '@type': 'Thing',
+        'property0': 'value0'
+      }]
+    }
+
+    const input = new Readable()
+
+    input._readableState.objectMode = true
+
+    input._read = () => {
+      quads.forEach((quad) => {
+        input.push(quad)
+      })
+
+      input.push(null)
+    }
+
+    const serializer = new JsonLdSerializerExt({frame: true, context: context, skipContext: true})
+    const stream = serializer.import(input)
+
+    let result
+
+    stream.on('data', (data) => {
+      result = data
+    })
+
+    return rdf.waitFor(stream).then(() => {
+      assert.deepEqual(result, jsonld)
+    })
+  })
+
   it('should support prefixes', () => {
     const quad = rdf.quad(
       rdf.namedNode('http://example.org/subject'),
