@@ -312,7 +312,6 @@ describe('rdf-serializer-jsonld-ext', () => {
     })
   })
 
-
   it('should not skip @graph property if options is true and array.length != 1', () => {
     const s0 = rdf.blankNode('b0')
 
@@ -333,7 +332,7 @@ describe('rdf-serializer-jsonld-ext', () => {
       '@context': {
         '@vocab': 'http://example.org/'
       },
-      "@type": "Thing"
+      '@type': 'Thing'
     }
 
     const jsonld = {
