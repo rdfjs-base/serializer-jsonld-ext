@@ -6,6 +6,22 @@ const sinkTest = require('rdf-sink/test')
 const Readable = require('readable-stream')
 const JsonLdSerializerExt = require('..')
 
+function quadsToReadable (quads) {
+  const readable = new Readable()
+
+  readable._readableState.objectMode = true
+
+  readable._read = () => {
+    quads.forEach((quad) => {
+      readable.push(quad)
+    })
+
+    readable.push(null)
+  }
+
+  return readable
+}
+
 describe('rdf-serializer-jsonld-ext', () => {
   sinkTest(JsonLdSerializerExt, {readable: true})
 
@@ -401,6 +417,48 @@ describe('rdf-serializer-jsonld-ext', () => {
     const stream = serializer.import(input)
 
     input.emit('prefix', 'ex', rdf.namedNode('http://example.org/'))
+
+    let result
+
+    stream.on('data', (data) => {
+      result = data
+    })
+
+    return rdf.waitFor(stream).then(() => {
+      assert.deepEqual(result, jsonld)
+    })
+  })
+
+  it('should support multiple processing steps', () => {
+    const s0 = rdf.namedNode('http://example.org/subject')
+
+    const quads = [
+      rdf.quad(
+        s0,
+        rdf.namedNode('http://example.org/property0'),
+        rdf.literal('value0')
+      ),
+      rdf.quad(
+        s0,
+        rdf.namedNode('http://example.org/property1'),
+        rdf.literal('value1')
+      )
+    ]
+
+    const jsonld = {
+      '@id': 'http://example.org/subject',
+      'http://example.org/property0': 'value0',
+      'http://example.org/property1': 'value1'
+    }
+
+    const input = quadsToReadable(quads)
+    const serializer = new JsonLdSerializerExt({
+      process: [
+        {flatten: true},
+        {compact: true}
+      ]
+    })
+    const stream = serializer.import(input)
 
     let result
 
