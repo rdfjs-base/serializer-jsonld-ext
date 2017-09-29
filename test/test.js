@@ -39,15 +39,7 @@ describe('rdf-serializer-jsonld-ext', () => {
       }
     }])
 
-    const input = new Readable()
-
-    input._readableState.objectMode = true
-
-    input._read = () => {
-      input.push(quad)
-      input.push(null)
-    }
-
+    const input = quadsToReadable([quad])
     const serializer = new JsonLdSerializerExt({outputFormat: 'string'})
     const stream = serializer.import(input)
 
@@ -81,15 +73,7 @@ describe('rdf-serializer-jsonld-ext', () => {
       }]
     }
 
-    const input = new Readable()
-
-    input._readableState.objectMode = true
-
-    input._read = () => {
-      input.push(quad)
-      input.push(null)
-    }
-
+    const input = quadsToReadable([quad])
     const serializer = new JsonLdSerializerExt({compact: true, context: context})
     const stream = serializer.import(input)
 
@@ -153,18 +137,7 @@ describe('rdf-serializer-jsonld-ext', () => {
       }]
     }
 
-    const input = new Readable()
-
-    input._readableState.objectMode = true
-
-    input._read = () => {
-      quads.forEach((quad) => {
-        input.push(quad)
-      })
-
-      input.push(null)
-    }
-
+    const input = quadsToReadable(quads)
     const serializer = new JsonLdSerializerExt({frame: true, context: context})
     const stream = serializer.import(input)
 
@@ -226,18 +199,7 @@ describe('rdf-serializer-jsonld-ext', () => {
       }
     }
 
-    const input = new Readable()
-
-    input._readableState.objectMode = true
-
-    input._read = () => {
-      quads.forEach((quad) => {
-        input.push(quad)
-      })
-
-      input.push(null)
-    }
-
+    const input = quadsToReadable(quads)
     const serializer = new JsonLdSerializerExt({frame: true, context: context, skipGraphProperty: true})
     const stream = serializer.import(input)
 
@@ -302,18 +264,7 @@ describe('rdf-serializer-jsonld-ext', () => {
       }]
     }
 
-    const input = new Readable()
-
-    input._readableState.objectMode = true
-
-    input._read = () => {
-      quads.forEach((quad) => {
-        input.push(quad)
-      })
-
-      input.push(null)
-    }
-
+    const input = quadsToReadable(quads)
     const serializer = new JsonLdSerializerExt({frame: true, context: context, skipGraphProperty: true})
     const stream = serializer.import(input)
 
@@ -359,18 +310,7 @@ describe('rdf-serializer-jsonld-ext', () => {
       }]
     }
 
-    const input = new Readable()
-
-    input._readableState.objectMode = true
-
-    input._read = () => {
-      quads.forEach((quad) => {
-        input.push(quad)
-      })
-
-      input.push(null)
-    }
-
+    const input = quadsToReadable(quads)
     const serializer = new JsonLdSerializerExt({frame: true, context: context, skipContext: true})
     const stream = serializer.import(input)
 
@@ -404,15 +344,7 @@ describe('rdf-serializer-jsonld-ext', () => {
       }]
     }
 
-    const input = new Readable()
-
-    input._readableState.objectMode = true
-
-    input._read = () => {
-      input.push(quad)
-      input.push(null)
-    }
-
+    const input = quadsToReadable([quad])
     const serializer = new JsonLdSerializerExt({compact: true})
     const stream = serializer.import(input)
 
