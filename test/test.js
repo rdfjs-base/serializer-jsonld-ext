@@ -32,11 +32,8 @@ describe('rdf-serializer-jsonld-ext', () => {
       rdf.literal('object1'))
 
     const jsonldString = JSON.stringify([{
-      '@id': '@default',
-      '@graph': {
-        '@id': 'http://example.org/subject',
-        'http://example.org/predicate': 'object1'
-      }
+      '@id': 'http://example.org/subject',
+      'http://example.org/predicate': 'object1'
     }])
 
     const input = quadsToReadable([quad])
@@ -66,11 +63,8 @@ describe('rdf-serializer-jsonld-ext', () => {
 
     const jsonld = {
       '@context': context,
-      '@id': '@default',
-      '@graph': [{
-        '@id': 'ex:subject',
-        'ex:predicate': 'object1'
-      }]
+      '@id': 'ex:subject',
+      'ex:predicate': 'object1'
     }
 
     const input = quadsToReadable([quad])
@@ -127,10 +121,8 @@ describe('rdf-serializer-jsonld-ext', () => {
         '@vocab': 'http://example.org/'
       },
       '@graph': [{
-        '@id': '_:b0',
         '@type': 'Thing',
         property0: {
-          '@id': '_:b1',
           '@type': 'OtherThing',
           property1: 'value1'
         }
@@ -152,7 +144,7 @@ describe('rdf-serializer-jsonld-ext', () => {
     })
   })
 
-  it('should skip @graph property if options is true and array.length == 1', () => {
+  it('should skip @graph property if skipGraphProperty is true and array.length == 1', () => {
     const root = rdf.blankNode()
     const property = rdf.blankNode()
 
@@ -190,10 +182,8 @@ describe('rdf-serializer-jsonld-ext', () => {
       '@context': {
         '@vocab': 'http://example.org/'
       },
-      '@id': '_:b0',
       '@type': 'Thing',
       property0: {
-        '@id': '_:b1',
         '@type': 'OtherThing',
         property1: 'value1'
       }
@@ -214,7 +204,7 @@ describe('rdf-serializer-jsonld-ext', () => {
     })
   })
 
-  it('should not skip @graph property if options is true and array.length != 1', () => {
+  it('should not skip @graph property if skipGraphProperty is true and array.length != 1', () => {
     const s0 = rdf.blankNode('b0')
     const s1 = rdf.blankNode('b1')
 
@@ -252,13 +242,9 @@ describe('rdf-serializer-jsonld-ext', () => {
         '@vocab': 'http://example.org/'
       },
       '@graph': [{
-        '@id': '@default'
-      }, {
-        '@id': '_:b0',
         '@type': 'Thing',
         'property0': 'value0'
       }, {
-        '@id': '_:b1',
         '@type': 'OtherThing',
         'property1': 'value1'
       }]
@@ -279,7 +265,7 @@ describe('rdf-serializer-jsonld-ext', () => {
     })
   })
 
-  it('should not skip @graph property if options is true and array.length != 1', () => {
+  it('should remove @context if skipContext is true', () => {
     const s0 = rdf.blankNode('b0')
 
     const quads = [
@@ -304,7 +290,6 @@ describe('rdf-serializer-jsonld-ext', () => {
 
     const jsonld = {
       '@graph': [{
-        '@id': '_:b0',
         '@type': 'Thing',
         'property0': 'value0'
       }]
@@ -337,11 +322,8 @@ describe('rdf-serializer-jsonld-ext', () => {
 
     const jsonld = {
       '@context': context,
-      '@id': '@default',
-      '@graph': [{
-        '@id': 'ex:subject',
-        'ex:predicate': 'object1'
-      }]
+      '@id': 'ex:subject',
+      'ex:predicate': 'object1'
     }
 
     const input = quadsToReadable([quad])

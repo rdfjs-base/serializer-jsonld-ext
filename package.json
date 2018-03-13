@@ -26,8 +26,8 @@
   "homepage": "https://github.com/rdf-ext/rdf-serializer-jsonld-ext",
   "dependencies": {
     "bluebird": "^3.5.0",
-    "jsonld": "^0.4.12",
-    "rdf-serializer-jsonld": "^1.0.0",
+    "jsonld": "^1.0.1",
+    "rdf-serializer-jsonld": "^1.1.2",
     "rdf-sink": "^1.0.0",
     "readable-stream": "^2.2.9"
   },
