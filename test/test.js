@@ -1,65 +1,42 @@
 /* global describe, it */
 
 const assert = require('assert')
-const rdf = require('rdf-ext')
-const sinkTest = require('rdf-sink/test')
-const Readable = require('readable-stream')
-const JsonLdSerializerExt = require('..')
+const namespace = require('@rdfjs/namespace')
+const quadsToReadable = require('./support/quadsToReadable')
+const rdf = require('@rdfjs/data-model')
+const sinkTest = require('@rdfjs/sink/test')
+const streamConcat = require('../lib/streamConcat')
+const JsonldSerializer = require('..')
 
-function quadsToReadable (quads) {
-  const readable = new Readable()
-
-  readable._readableState.objectMode = true
-
-  readable._read = () => {
-    quads.forEach((quad) => {
-      readable.push(quad)
-    })
-
-    readable.push(null)
-  }
-
-  return readable
+const ns = {
+  ex: namespace('http://example.org/'),
+  rdf: namespace('http://www.w3.org/1999/02/22-rdf-syntax-ns#')
 }
 
-describe('rdf-serializer-jsonld-ext', () => {
-  sinkTest(JsonLdSerializerExt, {readable: true})
+describe('@rdfjs/serializer-jsonld-ext', () => {
+  sinkTest(JsonldSerializer, { readable: true })
 
-  it('should support string output', () => {
-    const quad = rdf.quad(
-      rdf.namedNode('http://example.org/subject'),
-      rdf.namedNode('http://example.org/predicate'),
-      rdf.literal('object1'))
+  it('should support string output', async () => {
+    const quad = rdf.quad(ns.ex.subject, ns.ex.predicate, rdf.literal('object1'))
 
     const jsonldString = JSON.stringify([{
       '@id': 'http://example.org/subject',
-      'http://example.org/predicate': 'object1'
+      'http://example.org/predicate': [{
+        '@value': 'object1'
+      }]
     }])
 
     const input = quadsToReadable([quad])
-    const serializer = new JsonLdSerializerExt({outputFormat: 'string'})
+    const serializer = new JsonldSerializer({ encoding: 'string' })
     const stream = serializer.import(input)
+    const result = (await streamConcat(stream))
 
-    let result
-
-    stream.on('data', (data) => {
-      result = data
-    })
-
-    return rdf.waitFor(stream).then(() => {
-      assert.equal(result, jsonldString)
-    })
+    assert.strictEqual(result, jsonldString)
   })
 
-  it('should support compact', () => {
-    const quad = rdf.quad(
-      rdf.namedNode('http://example.org/subject'),
-      rdf.namedNode('http://example.org/predicate'),
-      rdf.literal('object1'))
-
-    const context = {
-      'ex': 'http://example.org/'
-    }
+  it('should support compact', async () => {
+    const quad = rdf.quad(ns.ex.subject, ns.ex.predicate, rdf.literal('object1'))
+    const context = { ex: 'http://example.org/' }
 
     const jsonld = {
       '@context': context,
@@ -68,45 +45,21 @@ describe('rdf-serializer-jsonld-ext', () => {
     }
 
     const input = quadsToReadable([quad])
-    const serializer = new JsonLdSerializerExt({compact: true, context: context})
+    const serializer = new JsonldSerializer({ compact: true, context })
     const stream = serializer.import(input)
+    const result = (await streamConcat(stream))[0]
 
-    let result
-
-    stream.on('data', (data) => {
-      result = data
-    })
-
-    return rdf.waitFor(stream).then(() => {
-      assert.deepEqual(result, jsonld)
-    })
+    assert.deepStrictEqual(result, jsonld)
   })
 
-  it('should support frame', () => {
+  it('should support frame', async () => {
     const root = rdf.blankNode()
     const property = rdf.blankNode()
-
     const quads = [
-      rdf.quad(
-        root,
-        rdf.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
-        rdf.namedNode('http://example.org/Thing')
-      ),
-      rdf.quad(
-        root,
-        rdf.namedNode('http://example.org/property0'),
-        property
-      ),
-      rdf.quad(
-        property,
-        rdf.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
-        rdf.namedNode('http://example.org/OtherThing')
-      ),
-      rdf.quad(
-        property,
-        rdf.namedNode('http://example.org/property1'),
-        rdf.literal('value1')
-      )
+      rdf.quad(root, ns.rdf.type, ns.ex.Thing),
+      rdf.quad(root, ns.ex.property0, property),
+      rdf.quad(property, ns.rdf.type, ns.ex.OtherThing),
+      rdf.quad(property, ns.ex.property1, rdf.literal('value1'))
     ]
 
     const context = {
@@ -130,45 +83,21 @@ describe('rdf-serializer-jsonld-ext', () => {
     }
 
     const input = quadsToReadable(quads)
-    const serializer = new JsonLdSerializerExt({frame: true, context: context})
+    const serializer = new JsonldSerializer({ frame: true, context })
     const stream = serializer.import(input)
+    const result = (await streamConcat(stream))[0]
 
-    let result
-
-    stream.on('data', (data) => {
-      result = data
-    })
-
-    return rdf.waitFor(stream).then(() => {
-      assert.deepEqual(result, jsonld)
-    })
+    assert.deepStrictEqual(result, jsonld)
   })
 
-  it('should skip @graph property if skipGraphProperty is true and array.length == 1', () => {
+  it('should skip @graph property if skipGraphProperty is true and array.length == 1', async () => {
     const root = rdf.blankNode()
     const property = rdf.blankNode()
-
     const quads = [
-      rdf.quad(
-        root,
-        rdf.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
-        rdf.namedNode('http://example.org/Thing')
-      ),
-      rdf.quad(
-        root,
-        rdf.namedNode('http://example.org/property0'),
-        property
-      ),
-      rdf.quad(
-        property,
-        rdf.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
-        rdf.namedNode('http://example.org/OtherThing')
-      ),
-      rdf.quad(
-        property,
-        rdf.namedNode('http://example.org/property1'),
-        rdf.literal('value1')
-      )
+      rdf.quad(root, ns.rdf.type, ns.ex.Thing),
+      rdf.quad(root, ns.ex.property0, property),
+      rdf.quad(property, ns.rdf.type, ns.ex.OtherThing),
+      rdf.quad(property, ns.ex.property1, rdf.literal('value1'))
     ]
 
     const context = {
@@ -190,45 +119,21 @@ describe('rdf-serializer-jsonld-ext', () => {
     }
 
     const input = quadsToReadable(quads)
-    const serializer = new JsonLdSerializerExt({frame: true, context: context, skipGraphProperty: true})
+    const serializer = new JsonldSerializer({ frame: true, context, skipGraphProperty: true })
     const stream = serializer.import(input)
+    const result = (await streamConcat(stream))[0]
 
-    let result
-
-    stream.on('data', (data) => {
-      result = data
-    })
-
-    return rdf.waitFor(stream).then(() => {
-      assert.deepEqual(result, jsonld)
-    })
+    assert.deepStrictEqual(result, jsonld)
   })
 
-  it('should not skip @graph property if skipGraphProperty is true and array.length != 1', () => {
-    const s0 = rdf.blankNode('b0')
-    const s1 = rdf.blankNode('b1')
-
+  it('should not skip @graph property if skipGraphProperty is true and array.length != 1', async () => {
+    const subject0 = rdf.blankNode()
+    const subject1 = rdf.blankNode()
     const quads = [
-      rdf.quad(
-        s0,
-        rdf.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
-        rdf.namedNode('http://example.org/Thing')
-      ),
-      rdf.quad(
-        s0,
-        rdf.namedNode('http://example.org/property0'),
-        rdf.literal('value0')
-      ),
-      rdf.quad(
-        s1,
-        rdf.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
-        rdf.namedNode('http://example.org/OtherThing')
-      ),
-      rdf.quad(
-        s1,
-        rdf.namedNode('http://example.org/property1'),
-        rdf.literal('value1')
-      )
+      rdf.quad(subject0, ns.rdf.type, ns.ex.Thing),
+      rdf.quad(subject0, ns.ex.property0, rdf.literal('value0')),
+      rdf.quad(subject1, ns.rdf.type, ns.ex.OtherThing),
+      rdf.quad(subject1, ns.ex.property1, rdf.literal('value1'))
     ]
 
     const context = {
@@ -251,34 +156,18 @@ describe('rdf-serializer-jsonld-ext', () => {
     }
 
     const input = quadsToReadable(quads)
-    const serializer = new JsonLdSerializerExt({frame: true, context: context, skipGraphProperty: true})
+    const serializer = new JsonldSerializer({ context, frame: true, skipGraphProperty: true })
     const stream = serializer.import(input)
+    const result = (await streamConcat(stream))[0]
 
-    let result
-
-    stream.on('data', (data) => {
-      result = data
-    })
-
-    return rdf.waitFor(stream).then(() => {
-      assert.deepEqual(result, jsonld)
-    })
+    assert.deepStrictEqual(result, jsonld)
   })
 
-  it('should remove @context if skipContext is true', () => {
-    const s0 = rdf.blankNode('b0')
-
+  it('should remove @context if skipContext is true', async () => {
+    const subject = rdf.blankNode()
     const quads = [
-      rdf.quad(
-        s0,
-        rdf.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
-        rdf.namedNode('http://example.org/Thing')
-      ),
-      rdf.quad(
-        s0,
-        rdf.namedNode('http://example.org/property0'),
-        rdf.literal('value0')
-      )
+      rdf.quad(subject, ns.rdf.type, ns.ex.Thing),
+      rdf.quad(subject, ns.ex.property0, rdf.literal('value0'))
     ]
 
     const context = {
@@ -296,28 +185,17 @@ describe('rdf-serializer-jsonld-ext', () => {
     }
 
     const input = quadsToReadable(quads)
-    const serializer = new JsonLdSerializerExt({frame: true, context: context, skipContext: true})
+    const serializer = new JsonldSerializer({ frame: true, context, skipContext: true })
     const stream = serializer.import(input)
+    const result = (await streamConcat(stream))[0]
 
-    let result
-
-    stream.on('data', (data) => {
-      result = data
-    })
-
-    return rdf.waitFor(stream).then(() => {
-      assert.deepEqual(result, jsonld)
-    })
+    assert.deepStrictEqual(result, jsonld)
   })
 
-  it('should support prefixes', () => {
-    const quad = rdf.quad(
-      rdf.namedNode('http://example.org/subject'),
-      rdf.namedNode('http://example.org/predicate'),
-      rdf.literal('object1'))
-
+  it('should support prefixes', async () => {
+    const quad = rdf.quad(ns.ex.subject, ns.ex.predicate, rdf.literal('object1'))
     const context = {
-      'ex': 'http://example.org/'
+      ex: 'http://example.org/'
     }
 
     const jsonld = {
@@ -327,61 +205,13 @@ describe('rdf-serializer-jsonld-ext', () => {
     }
 
     const input = quadsToReadable([quad])
-    const serializer = new JsonLdSerializerExt({compact: true})
+    const serializer = new JsonldSerializer({ compact: true })
     const stream = serializer.import(input)
 
     input.emit('prefix', 'ex', rdf.namedNode('http://example.org/'))
 
-    let result
+    const result = (await streamConcat(stream))[0]
 
-    stream.on('data', (data) => {
-      result = data
-    })
-
-    return rdf.waitFor(stream).then(() => {
-      assert.deepEqual(result, jsonld)
-    })
-  })
-
-  it('should support multiple processing steps', () => {
-    const s0 = rdf.namedNode('http://example.org/subject')
-
-    const quads = [
-      rdf.quad(
-        s0,
-        rdf.namedNode('http://example.org/property0'),
-        rdf.literal('value0')
-      ),
-      rdf.quad(
-        s0,
-        rdf.namedNode('http://example.org/property1'),
-        rdf.literal('value1')
-      )
-    ]
-
-    const jsonld = {
-      '@id': 'http://example.org/subject',
-      'http://example.org/property0': 'value0',
-      'http://example.org/property1': 'value1'
-    }
-
-    const input = quadsToReadable(quads)
-    const serializer = new JsonLdSerializerExt({
-      process: [
-        {flatten: true},
-        {compact: true}
-      ]
-    })
-    const stream = serializer.import(input)
-
-    let result
-
-    stream.on('data', (data) => {
-      result = data
-    })
-
-    return rdf.waitFor(stream).then(() => {
-      assert.deepEqual(result, jsonld)
-    })
+    assert.deepStrictEqual(result, jsonld)
   })
 })

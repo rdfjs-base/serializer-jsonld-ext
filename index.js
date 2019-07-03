@@ -1,5 +1,5 @@
 const SerializerStream = require('./lib/SerializerStream')
-const Sink = require('rdf-sink')
+const Sink = require('@rdfjs/sink')
 
 class Serializer extends Sink {
   constructor (options) {
