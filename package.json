@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/rdfjs/serializer-jsonld-ext.git"
+    "url": "https://github.com/rdfjs-base/serializer-jsonld-ext.git"
   },
   "keywords": [
     "rdf",
@@ -19,9 +19,9 @@
   "author": "Thomas Bergwinkl <bergi@axolotlfarm.org> (https://www.bergnet.org/people/bergi/card#me)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/rdfjs/serializer-jsonld-ext/issues"
+    "url": "https://github.com/rdfjs-base/serializer-jsonld-ext/issues"
   },
-  "homepage": "https://github.com/rdfjs/serializer-jsonld-ext",
+  "homepage": "https://github.com/rdfjs-base/serializer-jsonld-ext",
   "dependencies": {
     "@rdfjs/sink": "^1.0.2",
     "concat-stream": "^2.0.0",
