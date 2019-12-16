@@ -3,6 +3,7 @@
   "version": "1.4.0",
   "description": "JSON-LD serializer that implements the RDFJS Sink Interfaces and supports different output styles",
   "main": "index.js",
+  "types": "index.d.ts",
   "scripts": {
     "test": "standard && mocha"
   },
@@ -24,6 +25,8 @@
   "homepage": "https://github.com/rdfjs-base/serializer-jsonld-ext",
   "dependencies": {
     "@rdfjs/sink": "^1.0.2",
+    "@types/jsonld": "^1.5.0",
+    "@types/rdf-js": "^2.0.5",
     "concat-stream": "^2.0.0",
     "jsonld": "^1.6.2",
     "readable-stream": "^3.4.0"
