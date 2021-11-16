@@ -73,4 +73,13 @@ const output = serializerJsonld.import(input)
 output.on('data', jsonld => {
   console.log(jsonld)
 })
+
+// output:
+// {
+//   '@context': { '@vocab': 'http://schema.org/', ex: 'http://example.org/' },
+//   '@id': 'ex:sheldon-cooper',
+//   familyName: 'Cooper',
+//   givenName: 'Sheldon',
+//   knows: { '@id': 'ex:amy-farrah-fowler' }
+// }
 ```
