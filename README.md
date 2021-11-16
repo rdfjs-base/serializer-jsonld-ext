@@ -24,8 +24,6 @@ The constructor accepts an `options` object with the following optional keys:
 - `frame`: If this flag is `true`, the jsonld.js frame will be used to process the output.
 - `skipContext`: Removes the `@context` property from the output.
   Useful for HTTP server when the media type `application/json` is used and a context is provided as header link. 
-- `skipGraphProperty`: Tries to get rid of the intermediate `@graph` property.
-  If `@graph` contains more than one element, this option will be ignored as it would cause data loss. 
 - `encoding`: Defines the encoding of the output.
   Supported encodings are `string` and `object`.
   By default `object` is used.
