@@ -4,7 +4,7 @@ function quadsToReadable (quads) {
   const readable = new Readable({
     objectMode: true,
     read: () => {
-      quads.forEach((quad) => {
+      quads.forEach(quad => {
         readable.push(quad)
       })
 

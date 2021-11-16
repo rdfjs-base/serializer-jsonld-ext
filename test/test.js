@@ -1,12 +1,11 @@
-/* global describe, it */
-
 const assert = require('assert')
-const namespace = require('@rdfjs/namespace')
-const quadsToReadable = require('./support/quadsToReadable')
 const rdf = require('@rdfjs/data-model')
+const namespace = require('@rdfjs/namespace')
 const sinkTest = require('@rdfjs/sink/test')
-const streamConcat = require('../lib/streamConcat')
+const { describe, it } = require('mocha')
 const JsonldSerializer = require('..')
+const streamConcat = require('../lib/streamConcat')
+const quadsToReadable = require('./support/quadsToReadable')
 
 const ns = {
   ex: namespace('http://example.org/'),
@@ -73,44 +72,6 @@ describe('@rdfjs/serializer-jsonld-ext', () => {
       '@context': {
         '@vocab': 'http://example.org/'
       },
-      '@graph': [{
-        '@type': 'Thing',
-        property0: {
-          '@type': 'OtherThing',
-          property1: 'value1'
-        }
-      }]
-    }
-
-    const input = quadsToReadable(quads)
-    const serializer = new JsonldSerializer({ frame: true, context })
-    const stream = serializer.import(input)
-    const result = (await streamConcat(stream))[0]
-
-    assert.deepStrictEqual(result, jsonld)
-  })
-
-  it('should skip @graph property if skipGraphProperty is true and array.length == 1', async () => {
-    const root = rdf.blankNode()
-    const property = rdf.blankNode()
-    const quads = [
-      rdf.quad(root, ns.rdf.type, ns.ex.Thing),
-      rdf.quad(root, ns.ex.property0, property),
-      rdf.quad(property, ns.rdf.type, ns.ex.OtherThing),
-      rdf.quad(property, ns.ex.property1, rdf.literal('value1'))
-    ]
-
-    const context = {
-      '@context': {
-        '@vocab': 'http://example.org/'
-      },
-      '@type': 'Thing'
-    }
-
-    const jsonld = {
-      '@context': {
-        '@vocab': 'http://example.org/'
-      },
       '@type': 'Thing',
       property0: {
         '@type': 'OtherThing',
@@ -119,44 +80,7 @@ describe('@rdfjs/serializer-jsonld-ext', () => {
     }
 
     const input = quadsToReadable(quads)
-    const serializer = new JsonldSerializer({ frame: true, context, skipGraphProperty: true })
-    const stream = serializer.import(input)
-    const result = (await streamConcat(stream))[0]
-
-    assert.deepStrictEqual(result, jsonld)
-  })
-
-  it('should not skip @graph property if skipGraphProperty is true and array.length != 1', async () => {
-    const subject0 = rdf.blankNode()
-    const subject1 = rdf.blankNode()
-    const quads = [
-      rdf.quad(subject0, ns.rdf.type, ns.ex.Thing),
-      rdf.quad(subject0, ns.ex.property0, rdf.literal('value0')),
-      rdf.quad(subject1, ns.rdf.type, ns.ex.OtherThing),
-      rdf.quad(subject1, ns.ex.property1, rdf.literal('value1'))
-    ]
-
-    const context = {
-      '@context': {
-        '@vocab': 'http://example.org/'
-      }
-    }
-
-    const jsonld = {
-      '@context': {
-        '@vocab': 'http://example.org/'
-      },
-      '@graph': [{
-        '@type': 'Thing',
-        'property0': 'value0'
-      }, {
-        '@type': 'OtherThing',
-        'property1': 'value1'
-      }]
-    }
-
-    const input = quadsToReadable(quads)
-    const serializer = new JsonldSerializer({ context, frame: true, skipGraphProperty: true })
+    const serializer = new JsonldSerializer({ frame: true, context })
     const stream = serializer.import(input)
     const result = (await streamConcat(stream))[0]
 
@@ -178,10 +102,8 @@ describe('@rdfjs/serializer-jsonld-ext', () => {
     }
 
     const jsonld = {
-      '@graph': [{
-        '@type': 'Thing',
-        'property0': 'value0'
-      }]
+      '@type': 'Thing',
+      property0: 'value0'
     }
 
     const input = quadsToReadable(quads)
