@@ -1,11 +1,12 @@
-const assert = require('assert')
-const rdf = require('@rdfjs/data-model')
-const namespace = require('@rdfjs/namespace')
-const sinkTest = require('@rdfjs/sink/test')
-const { describe, it } = require('mocha')
-const JsonldSerializer = require('..')
-const streamConcat = require('../lib/streamConcat')
-const quadsToReadable = require('./support/quadsToReadable')
+import { deepStrictEqual, strictEqual } from 'assert'
+import rdf from '@rdfjs/data-model'
+import namespace from '@rdfjs/namespace'
+import sinkTest from '@rdfjs/sink/test/index.js'
+import { describe, it } from 'mocha'
+import { Readable } from 'readable-stream'
+import chunks from 'stream-chunks/chunks.js'
+import decode from 'stream-chunks/decode.js'
+import JsonldSerializer from '../index.js'
 
 const ns = {
   ex: namespace('http://example.org/'),
@@ -18,37 +19,55 @@ describe('@rdfjs/serializer-jsonld-ext', () => {
   it('should support string output', async () => {
     const quad = rdf.quad(ns.ex.subject, ns.ex.predicate, rdf.literal('object1'))
 
-    const jsonldString = JSON.stringify([{
+    const expected = JSON.stringify([{
       '@id': 'http://example.org/subject',
       'http://example.org/predicate': [{
         '@value': 'object1'
       }]
     }])
 
-    const input = quadsToReadable([quad])
+    const input = Readable.from([quad])
     const serializer = new JsonldSerializer({ encoding: 'string' })
     const stream = serializer.import(input)
-    const result = (await streamConcat(stream))
+    const result = await decode(stream)
 
-    assert.strictEqual(result, jsonldString)
+    strictEqual(result, expected)
+  })
+
+  it('should support pretty-print string output', async () => {
+    const quad = rdf.quad(ns.ex.subject, ns.ex.predicate, rdf.literal('object1'))
+
+    const expected = JSON.stringify([{
+      '@id': 'http://example.org/subject',
+      'http://example.org/predicate': [{
+        '@value': 'object1'
+      }]
+    }], null, 2)
+
+    const input = Readable.from([quad])
+    const serializer = new JsonldSerializer({ encoding: 'string', prettyPrint: true })
+    const stream = serializer.import(input)
+    const result = await decode(stream)
+
+    strictEqual(result, expected)
   })
 
   it('should support compact', async () => {
     const quad = rdf.quad(ns.ex.subject, ns.ex.predicate, rdf.literal('object1'))
     const context = { ex: 'http://example.org/' }
 
-    const jsonld = {
+    const expected = {
       '@context': context,
       '@id': 'ex:subject',
       'ex:predicate': 'object1'
     }
 
-    const input = quadsToReadable([quad])
+    const input = Readable.from([quad])
     const serializer = new JsonldSerializer({ compact: true, context })
     const stream = serializer.import(input)
-    const result = (await streamConcat(stream))[0]
+    const result = (await chunks(stream))[0]
 
-    assert.deepStrictEqual(result, jsonld)
+    deepStrictEqual(result, expected)
   })
 
   it('should support frame', async () => {
@@ -68,7 +87,7 @@ describe('@rdfjs/serializer-jsonld-ext', () => {
       '@type': 'Thing'
     }
 
-    const jsonld = {
+    const expected = {
       '@context': {
         '@vocab': 'http://example.org/'
       },
@@ -79,12 +98,12 @@ describe('@rdfjs/serializer-jsonld-ext', () => {
       }
     }
 
-    const input = quadsToReadable(quads)
+    const input = Readable.from(quads)
     const serializer = new JsonldSerializer({ frame: true, context })
     const stream = serializer.import(input)
-    const result = (await streamConcat(stream))[0]
+    const result = (await chunks(stream))[0]
 
-    assert.deepStrictEqual(result, jsonld)
+    deepStrictEqual(result, expected)
   })
 
   it('should remove @context if skipContext is true', async () => {
@@ -101,39 +120,98 @@ describe('@rdfjs/serializer-jsonld-ext', () => {
       '@type': 'Thing'
     }
 
-    const jsonld = {
+    const expected = {
       '@type': 'Thing',
       property0: 'value0'
     }
 
-    const input = quadsToReadable(quads)
+    const input = Readable.from(quads)
     const serializer = new JsonldSerializer({ frame: true, context, skipContext: true })
     const stream = serializer.import(input)
-    const result = (await streamConcat(stream))[0]
+    const result = (await chunks(stream))[0]
 
-    assert.deepStrictEqual(result, jsonld)
+    deepStrictEqual(result, expected)
+  })
+
+  it('should handle baseIRI given as NamedNode', async () => {
+    const quad = rdf.quad(ns.ex.subject, ns.ex.predicate, rdf.literal('object1'))
+
+    const expected = {
+      '@context': {
+        '@base': 'http://example.org/'
+      },
+      '@id': 'subject',
+      'http://example.org/predicate': 'object1'
+    }
+
+    const input = Readable.from([quad])
+    const serializer = new JsonldSerializer({ baseIRI: ns.ex(''), compact: true })
+    const stream = serializer.import(input)
+
+    const result = (await chunks(stream))[0]
+
+    deepStrictEqual(result, expected)
+  })
+
+  it('should handle baseIRI given as URL', async () => {
+    const quad = rdf.quad(ns.ex.subject, ns.ex.predicate, rdf.literal('object1'))
+
+    const expected = {
+      '@context': {
+        '@base': 'http://example.org/'
+      },
+      '@id': 'subject',
+      'http://example.org/predicate': 'object1'
+    }
+
+    const input = Readable.from([quad])
+    const serializer = new JsonldSerializer({ baseIRI: new URL(ns.ex('').value), compact: true })
+    const stream = serializer.import(input)
+
+    const result = (await chunks(stream))[0]
+
+    deepStrictEqual(result, expected)
+  })
+
+  it('should handle baseIRI given as string', async () => {
+    const quad = rdf.quad(ns.ex.subject, ns.ex.predicate, rdf.literal('object1'))
+
+    const expected = {
+      '@context': {
+        '@base': 'http://example.org/'
+      },
+      '@id': 'subject',
+      'http://example.org/predicate': 'object1'
+    }
+
+    const input = Readable.from([quad])
+    const serializer = new JsonldSerializer({ baseIRI: ns.ex('').value, compact: true })
+    const stream = serializer.import(input)
+
+    const result = (await chunks(stream))[0]
+
+    deepStrictEqual(result, expected)
   })
 
   it('should support prefixes', async () => {
     const quad = rdf.quad(ns.ex.subject, ns.ex.predicate, rdf.literal('object1'))
-    const context = {
-      ex: 'http://example.org/'
-    }
 
-    const jsonld = {
-      '@context': context,
+    const expected = {
+      '@context': {
+        ex: 'http://example.org/'
+      },
       '@id': 'ex:subject',
       'ex:predicate': 'object1'
     }
 
-    const input = quadsToReadable([quad])
+    const input = Readable.from([quad])
     const serializer = new JsonldSerializer({ compact: true })
     const stream = serializer.import(input)
 
     input.emit('prefix', 'ex', rdf.namedNode('http://example.org/'))
 
-    const result = (await streamConcat(stream))[0]
+    const result = (await chunks(stream))[0]
 
-    assert.deepStrictEqual(result, jsonld)
+    deepStrictEqual(result, expected)
   })
 })
