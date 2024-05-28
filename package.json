@@ -34,6 +34,6 @@
     "@rdfjs/namespace": "^2.0.0",
     "c8": "^7.13.0",
     "mocha": "^10.2.0",
-    "stricter-standard": "^0.2.0"
+    "stricter-standard": "^0.3.1"
   }
 }
