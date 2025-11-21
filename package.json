@@ -25,7 +25,7 @@
   "homepage": "https://github.com/rdfjs-base/serializer-jsonld-ext",
   "dependencies": {
     "@rdfjs/sink": "^2.0.1",
-    "jsonld": "^8.3.3",
+    "jsonld": "^9.0.0",
     "readable-stream": "^4.7.0",
     "stream-chunks": "^1.0.0"
   },
